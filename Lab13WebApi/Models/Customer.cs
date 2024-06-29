@@ -7,7 +7,7 @@
         public string LastName { get; set; }
         public string DocumentNumber { get; set; }
 
-        public string Email {  get; set; }
+        public string? Email {  get; set; }
 
         public Nullable<bool> Activo { get; set; } = true;
     }

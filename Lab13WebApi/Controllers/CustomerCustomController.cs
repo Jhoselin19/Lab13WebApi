@@ -1,12 +1,12 @@
 ﻿using Lab13WebApi.Models;
 using Lab13WebApi.Request;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lab13WebApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class CustomerCustomController : ControllerBase
     {
@@ -18,69 +18,55 @@ namespace Lab13WebApi.Controllers
         }
 
         // POST: api/Customer
+        [Authorize]
         [HttpPost]
-        public void Insert([FromBody] CustomerInsertRequest customer)
+        public IActionResult Insert([FromBody] CustomerInsertRequest customer)
         {
-            Customer model = new Customer();
-            model.FirstName = customer.FirstName;
-            model.LastName = customer.LastName;
-            model.DocumentNumber = customer.DocumentNumber;
+            Customer model = new Customer
+            {
+                FirstName = customer.FirstName,
+                LastName = customer.LastName,
+                DocumentNumber = customer.DocumentNumber
+            };
 
             _context.Customers.Add(model);
             _context.SaveChanges();
 
+            return Ok();
         }
 
-        [HttpDelete]
-        public void Delete([FromBody] CustomerDeleteRequest request)
+        [Authorize]
+        [HttpPost]
+        public IActionResult DeleteCustomer([FromBody] CustomerDeleteRequest request)
         {
             var customer = _context.Customers.Find(request.CustomerId);
+            if (customer == null)
+            {
+                return NotFound(new { message = "Customer not found" });
+            }
 
-            _context.Customers.Remove(customer);
+            customer.Activo = false;
             _context.SaveChanges();
 
+            return Ok(new { message = "Customer deactivated successfully" });
         }
 
+        [Authorize]
         [HttpPut]
-        public void Update([FromBody] CustomerUpdateRequest request)
+        public IActionResult Update([FromBody] CustomerUpdateRequest request)
         {
             var customer = _context.Customers.Find(request.CustomerId);
+            if (customer == null)
+            {
+                throw new KeyNotFoundException("Customer not found");
+            }
 
             customer.DocumentNumber = request.DocumentNumber;
             customer.Email = request.Email;
 
             _context.SaveChanges();
+
+            return Ok();
         }
-
-        [HttpPost("InsertInvoices")]
-        public IActionResult InsertInvoices([FromBody] CustomerInvoceRequest request)
-        {
-            try
-            {
-                var customer = _context.Customers.Find(request.CustomerId);
-
-                foreach (var invoice in request.Invoices)
-                {
-                    var newInvoice = new Invoice
-                    {
-                        CustomerId = request.CustomerId,
-                        InvoiceNumber = invoice.InvoiceNumber,
-                        Total = invoice.Total,
-                        Date = invoice.Date
-                    };
-
-                    _context.Invoices.Add(newInvoice);
-                }
-
-                _context.SaveChanges();
-
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error al insertar las facturas: {ex.Message}");
-            }
-        }
-
     }
 }

@@ -5,5 +5,6 @@
         public int Amount { get; set; }
         public float Price { get; set; }
         public float Subtotal { get; set; }
+        public int ProductId { get; set; }
     }
 }

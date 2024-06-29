@@ -5,6 +5,6 @@ namespace Lab13WebApi.Request
     public class CustomerInvoceRequest
     {
         public int CustomerId { get; set; }
-        public List<InvoiceListRequest> Invoices { get; set; }
+        public List<InvoiceRequest> Invoices { get; set; }
     }
 }

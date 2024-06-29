@@ -30,14 +30,19 @@ namespace Lab13WebApi.Controllers
 
         }
 
-        [HttpDelete]
-        public void Delete([FromBody] ProductDeleteRequest request)
+        [HttpPost]
+        public IActionResult DeleteProduct([FromBody] ProductDeleteRequest request)
         {
             var product = _context.Products.Find(request.ProductId);
+            if (product == null)
+            {
+                return NotFound(new { message = "Product not found" });
+            }
 
-            _context.Products.Remove(product);
+            product.Activo = false;
             _context.SaveChanges();
 
+            return Ok(new { message = "Product deactivated successfully" });
         }
 
         [HttpPut]
@@ -51,41 +56,34 @@ namespace Lab13WebApi.Controllers
             _context.SaveChanges();
         }
 
-        [HttpDelete]
-        public IActionResult DeleteProducts([FromBody] ProductListRequest request)
+        [HttpPost]
+        public IActionResult DeleteProductsList([FromBody] DeleteListProductsRequest request)
         {
-            if (request == null || request.Products == null || !request.Products.Any())
+            // Verificar si la lista de IDs está vacía
+            if (request.ProductId == null || !request.ProductId.Any())
             {
-                return BadRequest("La solicitud no contiene productos válidos para eliminar.");
+                return BadRequest(new { message = "No product IDs provided" });
             }
 
-            try
+            // Buscar los productos que coincidan con los IDs proporcionados
+            var products = _context.Products.Where(p => request.ProductId.Contains(p.ProductId)).ToList();
+
+            // Verificar si se encontraron productos
+            if (!products.Any())
             {
-                // Filtrar los productos a eliminar por nombre y precio
-                var productsToDelete = new List<Product>();
-
-                foreach (var productReq in request.Products)
-                {
-                    var product = _context.Products.FirstOrDefault(p => p.Name == productReq.Name && p.Price == productReq.Price);
-                    if (product != null)
-                    {
-                        productsToDelete.Add(product);
-                    }
-                }
-
-                if (productsToDelete.Any())
-                {
-                    _context.Products.RemoveRange(productsToDelete);
-                    _context.SaveChanges();
-                }
-
-                return Ok(); // Devuelve 200 OK si se eliminaron los productos correctamente
+                return NotFound(new { message = "No products found for the given IDs" });
             }
-            catch (Exception ex)
+
+            // Actualizar el campo Activo a false para cada producto encontrado
+            foreach (var product in products)
             {
-                // Manejar cualquier excepción y devolver un código de estado 500
-                return StatusCode(500, $"Error al eliminar los productos: {ex.Message}");
+                product.Activo = false;
             }
+
+            // Guardar los cambios en la base de datos
+            _context.SaveChanges();
+
+            return Ok(new { message = "Products deactivated successfully" });
         }
     }
 }

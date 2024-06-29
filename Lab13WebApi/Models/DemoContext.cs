@@ -12,7 +12,7 @@ namespace Lab13WebApi.Models
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             //base.OnConfiguring(optionsBuilder);
-            optionsBuilder.UseSqlServer("Server=LAB1504-28\\TECSUP;Initial Catalog=StoreBD; User id=user01; Pwd=123456;Trusted_Connection=True;TrustServerCertificate=True");
+            optionsBuilder.UseSqlServer("Server=LAPTOP-19VR9K1O\\SQLEXPRESS;Initial Catalog=StoreBD; User id=user01; Pwd=123456;Trusted_Connection=True;TrustServerCertificate=True");
 
         }
     }

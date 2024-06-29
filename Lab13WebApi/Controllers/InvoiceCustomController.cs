@@ -35,45 +35,54 @@ namespace Lab13WebApi.Controllers
         [HttpPost]
         public IActionResult InsertInvoiceDetail([FromBody] InvoiceDetailRequest request)
         {
-            if (request == null || request.Details == null || !request.Details.Any())
+            var invoice = _context.Invoices.Find(request.InvoiceId);
+            if (invoice == null)
             {
-                return BadRequest("La solicitud no contiene detalles de factura válidos para insertar.");
+                return NotFound(new { message = "Invoice not found" });
             }
 
-            try
+            foreach (var detail in request.Details)
             {
-                var invoice = _context.Invoices.Find(request.InvoiceId);
-
-                if (invoice == null)
+                Detail model = new Detail
                 {
-                    return NotFound($"Factura con Id {request.InvoiceId} no encontrada.");
-                }
-
-                foreach (var detail in request.Details)
-                {
-                    // Crear un nuevo detalle de factura y asociarlo a la factura
-                    var newDetail = new Detail
-                    {
-                        InvoiceId = request.InvoiceId,
-                        Price = detail.Price,
-                        Amount = detail.Amount,
-                        Subtotal = detail.Subtotal,
-                        ProductId = detail.ProductId,
-
-                    };
-
-                    _context.Details.Add(newDetail);
-                }
-
-                _context.SaveChanges();
-
-                return Ok(); 
+                    Amount = detail.Amount,
+                    Price = detail.Price,
+                    Subtotal = detail.Subtotal,
+                    ProductId = detail.ProductId,
+                    InvoiceId = request.InvoiceId
+                };
+                _context.Details.Add(model);
             }
-            catch (Exception ex)
+
+            _context.SaveChanges();
+
+            return Ok(new { message = "Details added successfully" });
+        }
+
+        [HttpPost]
+        public IActionResult InsertCustomerInvoices([FromBody] CustomerInvoceRequest request)
+        {
+            var customer = _context.Customers.Find(request.CustomerId);
+            if (customer == null)
             {
-                
-                return StatusCode(500, $"Error al insertar los detalles de factura: {ex.Message}");
+                return NotFound(new { message = "Customer not found" });
             }
+
+            foreach (var invoiceRequest in request.Invoices)
+            {
+                Invoice model = new Invoice
+                {
+                    InvoiceNumber = invoiceRequest.InvoiceNumber,
+                    Total = invoiceRequest.Total,
+                    Date = invoiceRequest.Date ?? DateTime.Now,
+                    CustomerId = request.CustomerId
+                };
+                _context.Invoices.Add(model);
+            }
+
+            _context.SaveChanges();
+
+            return Ok(new { message = "Invoices added successfully" });
         }
     }
 }
